@@ -20,24 +20,28 @@ int main(int argc, char** argv)
 	qConsole con(argc, argv);
 
 	auto gamePath = con.GetArgument("-gamepath");
-
 	auto qsymbolsDictionary = con.GetArgument("-qsymbols");
+	auto outPath = con.GetArgument("-out");
 
-	if (!gamePath)
+	if (gamePath.IsEmpty())
 	{
 		qPrintf("ERROR: '-gamepath' is not set!\n");
 		return 1;
 	}
 
-	if (qsymbolsDictionary && StreamResourceLoader::LoadResourceFile(qsymbolsDictionary)) {
+	if (!gamePath.EndsWith("\\")) {
+		gamePath += "\\";
+	}
+
+	if (!qsymbolsDictionary.IsEmpty() && StreamResourceLoader::LoadResourceFile(qsymbolsDictionary)) {
 		gSymbolMap.Build();
 	}
 	else {
 		qPrintf("WARN: No qSymbols dictionary loaded - path not set or failed to load.\n");
 	}
 
-	if (!gamePath.EndsWith("\\")) {
-		gamePath += "\\";
+	if (!outPath.IsEmpty() && !outPath.EndsWith("\\")) {
+		outPath += "\\";
 	}
 
 	BigFileSystem::m_BigFileNamePrefix = gamePath;
@@ -77,8 +81,12 @@ int main(int argc, char** argv)
 
 			qPrintf("INFO: Exporting %s\n", name);
 
+			qString filename = outPath;
+			filename += propertySetResource->GetNameString();
+			filename += ".xml";
+
 			qPropertySet2XML propertySet2XML = { propertySetResource };
-			propertySet2XML.Export();
+			propertySet2XML.Export(filename);
 		}
 	}
 

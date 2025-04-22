@@ -83,15 +83,6 @@ public:
 		mXMLW = SimpleXML::XMLWriter::CreateBuffer(0x8000, 0);
 	}
 
-	~qPropertySet2XML()
-	{
-		qString filename = mResource->GetNameString();
-		filename += ".xml";
-
-		mXMLW->CloseBufferAndWriteToFile(filename);
-		mXMLW = 0;
-	}
-
 	// Symbols
 
 	qString FormatUID(u32 uid) { return { "0x%X", uid }; }
@@ -520,23 +511,25 @@ public:
 		mXMLW->EndNode(xmlTag);
 	}
 
-	void Export()
+	void Export(const char* filename)
 	{
 		auto propSet = mResource->GetPropertySet();
 		ExportPropertySet(propSet, mResource->GetNameString(), "PropertySetResource");
 
-		if (mUnresolvedSymbols.empty()) {
-			return;
-		}
-
-		mXMLW->AddComment(" List of unresolved symbols ");
-
-		for (auto& pair : mUnresolvedSymbols)
+		if (!mUnresolvedSymbols.empty())
 		{
-			const char* type = (pair.second == 2 ? "WWise" : pair.second == 1 ? "Uppercase" : "Normal");
-			qString strUID = FormatUID(pair.first);
-			qString str = { " %s (%s) ", strUID.mData, type };
-			mXMLW->AddComment(str);
+			mXMLW->AddComment(" List of unresolved symbols ");
+
+			for (auto& pair : mUnresolvedSymbols)
+			{
+				const char* type = (pair.second == 2 ? "WWise" : pair.second == 1 ? "Uppercase" : "Normal");
+				qString strUID = FormatUID(pair.first);
+				qString str = { " %s (%s) ", strUID.mData, type };
+				mXMLW->AddComment(str);
+			}
 		}
+
+		mXMLW->CloseBufferAndWriteToFile(filename);
+		mXMLW = 0;
 	}
 };
